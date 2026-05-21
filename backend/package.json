@@ -1,0 +1,17 @@
+{
+  "name": "threatLens-ai-backend",
+  "version": "1.0.0",
+  "description": "Flask backend API for ThreatLens AI phishing detection system",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py",
+    "dev": "python app.py"
+  },
+  "keywords": ["phishing", "detection", "api", "ml"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "flask": "^2.3.0",
+    "flask-cors": "^4.0.0"
+  }
+}
