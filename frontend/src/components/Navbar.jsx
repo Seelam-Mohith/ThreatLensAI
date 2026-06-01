@@ -22,7 +22,7 @@ function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
             <Shield className="w-8 h-8 text-indigo-600" />
-            ThreatLens AI
+            QuantShield
           </Link>
 
           {/* Desktop Menu */}

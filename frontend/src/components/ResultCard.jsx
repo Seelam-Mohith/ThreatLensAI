@@ -18,7 +18,7 @@ function ResultCard({ result, isLoading }) {
         <Icon className={`w-8 h-8 mt-1 flex-shrink-0 ${isPredicting ? 'text-red-500' : 'text-green-500'}`} />
         <div className="flex-1">
           <h3 className={`text-2xl font-bold ${isPredicting ? 'text-red-600' : 'text-green-600'}`}>
-            {isPredicting ? '🚨 Phishing Detected' : '✓ Safe to Open'}
+            {isPredicting ? 'Phishing Detected' : 'Safe to Open'}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
             {result.message || 'Analysis complete.'}

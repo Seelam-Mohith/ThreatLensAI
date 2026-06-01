@@ -1,4 +1,4 @@
-# ThreatLens AI - Frontend
+# QuantShield - Frontend
 
 A modern React-based web application for AI-powered phishing detection and URL analysis.
 
@@ -176,4 +176,4 @@ The app supports dark mode through Tailwind's dark mode utilities. Classes use `
 
 ## License
 
-This project is part of the ThreatLens AI system - a comprehensive phishing detection platform.
+This project is part of the QuantShield system - a comprehensive phishing detection platform.

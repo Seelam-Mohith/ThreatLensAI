@@ -296,7 +296,7 @@ function Dashboard() {
                   <td className="py-3 px-4 text-center text-gray-700 dark:text-gray-300">{row.recall.toFixed(2)}%</td>
                   <td className="py-3 px-4 text-center">
                     <span className="inline-block px-3 py-1 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 text-xs font-semibold">
-                      ✓ Active
+                      Active
                     </span>
                   </td>
                 </tr>

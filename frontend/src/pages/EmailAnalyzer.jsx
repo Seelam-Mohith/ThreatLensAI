@@ -54,7 +54,7 @@ function EmailAnalyzer() {
             disabled={loading}
             className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Analyzing...' : '🔍 Analyze Email'}
+            {loading ? 'Analyzing...' : 'Analyze Email'}
           </button>
           <button
             onClick={handleClear}
@@ -69,7 +69,7 @@ function EmailAnalyzer() {
         <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex gap-3">
           <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-blue-700 dark:text-blue-300">
-            Your email content is analyzed locally using our trained ML models. No data is stored or sent to external servers.
+            Your email content is analyzed using our detection engine. No data is stored or sent to external servers.
           </p>
         </div>
       </div>
@@ -104,7 +104,7 @@ function EmailAnalyzer() {
       {/* Tips Section */}
       {!result && !loading && (
         <div className="card mt-12 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">💡 Quick Tips</h3>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Quick Tips</h3>
           <ul className="space-y-3 text-gray-700 dark:text-gray-300">
             <li className="flex gap-3">
               <span className="text-indigo-600">•</span>

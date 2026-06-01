@@ -35,10 +35,11 @@ function LeaderboardTable({ data, highlight }) {
                 }`}
               >
                 <td className="py-3 px-4">
-                  {idx === 0 && <span className="text-lg">🏆</span>}
-                  {idx === 1 && <span className="text-lg">🥈</span>}
-                  {idx === 2 && <span className="text-lg">🥉</span>}
-                  {idx > 2 && <span className="text-gray-500">#{idx + 1}</span>}
+                  <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-semibold ${
+                    idx === 0 ? 'bg-yellow-100 text-yellow-800' : idx === 1 ? 'bg-gray-100 text-gray-800' : idx === 2 ? 'bg-amber-100 text-amber-800' : 'bg-transparent text-gray-500'
+                  }`}>
+                    {idx + 1}
+                  </span>
                 </td>
                 <td className="py-3 px-4 font-semibold text-gray-800 dark:text-gray-200">{row.model}</td>
                 <td className="py-3 px-4 text-center">

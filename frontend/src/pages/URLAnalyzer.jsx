@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Globe, AlertCircle } from 'lucide-react'
+import { Globe, AlertCircle, Check } from 'lucide-react'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ResultCard from '../components/ResultCard'
 import LeaderboardTable from '../components/LeaderboardTable'
@@ -40,7 +40,7 @@ function URLAnalyzer() {
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white">URL Analyzer</h1>
         </div>
         <p className="text-lg text-gray-600 dark:text-gray-400">
-          Check if a URL is safe or potentially malicious using AI analysis
+          Check if a URL is safe or potentially malicious using our analysis engine
         </p>
       </div>
 
@@ -61,7 +61,7 @@ function URLAnalyzer() {
           />
           {url && isValidUrl(url) && (
             <div className="flex items-center px-3 text-green-600 dark:text-green-400">
-              ✓
+              <Check className="w-4 h-4" />
             </div>
           )}
         </div>
@@ -72,7 +72,7 @@ function URLAnalyzer() {
             disabled={loading || !url.trim()}
             className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Analyzing...' : '🔍 Analyze URL'}
+            {loading ? 'Analyzing...' : 'Analyze URL'}
           </button>
           <button
             onClick={handleClear}
@@ -87,7 +87,7 @@ function URLAnalyzer() {
         <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex gap-3">
           <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-blue-700 dark:text-blue-300">
-            Analysis is performed safely without visiting the URL. We check domain reputation, SSL certificates, and phishing patterns.
+            Analysis is performed safely without visiting the URL. We check domain reputation, SSL certificates, and common phishing patterns.
           </p>
         </div>
       </div>
@@ -122,7 +122,7 @@ function URLAnalyzer() {
       {/* Safety Tips Section */}
       <div className="mt-12 grid md:grid-cols-2 gap-8">
         <div className="card bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">✓ Safe URL Indicators</h3>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Safe URL Indicators</h3>
           <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
             <li>• HTTPS protocol (not HTTP)</li>
             <li>• Well-known domain names</li>
@@ -133,7 +133,7 @@ function URLAnalyzer() {
         </div>
 
         <div className="card bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">⚠️ Warning Signs</h3>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Warning Signs</h3>
           <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
             <li>• Shortened or obfuscated URLs</li>
             <li>• Suspicious TLDs (.tk, .ml, etc.)</li>
@@ -147,7 +147,7 @@ function URLAnalyzer() {
       {/* Analysis Tips */}
       {!result && !loading && (
         <div className="card mt-12 bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">💡 Analysis Methods</h3>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Analysis Methods</h3>
           <ul className="space-y-3 text-gray-700 dark:text-gray-300">
             <li className="flex gap-3">
               <span className="text-indigo-600">•</span>

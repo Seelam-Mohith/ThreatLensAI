@@ -1,7 +1,7 @@
 {
-  "name": "threatLens-ai-backend",
+  "name": "quantshield-backend",
   "version": "1.0.0",
-  "description": "Flask backend API for ThreatLens AI phishing detection system",
+  "description": "Flask backend API for QuantShield phishing detection system",
   "main": "app.py",
   "scripts": {
     "start": "python app.py",

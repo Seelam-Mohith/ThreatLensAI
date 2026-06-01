@@ -1,6 +1,6 @@
-# ThreatLens AI Backend
+# QuantShield Backend
 
-Flask backend API for the ThreatLens AI phishing detection system.
+Flask backend API for the QuantShield phishing detection system.
 
 ## Installation
 
@@ -12,7 +12,7 @@ Flask backend API for the ThreatLens AI phishing detection system.
 
 1. Install dependencies in your `.venv`:
 ```bash
-# From the root ThreatLens AI directory
+# From the root QuantShield directory
 pip install flask flask-cors
 ```
 

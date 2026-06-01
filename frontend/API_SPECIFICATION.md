@@ -1,6 +1,6 @@
-# ThreatLens AI - Frontend API Specification
+# QuantShield - Frontend API Specification
 
-This document outlines the API contracts expected by the React frontend for the ThreatLens AI system.
+This document outlines the API contracts expected by the React frontend for the QuantShield system.
 
 ## Base URL
 ```

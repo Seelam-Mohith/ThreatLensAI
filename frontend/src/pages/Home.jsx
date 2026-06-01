@@ -36,7 +36,7 @@ function Home() {
         <div className="mb-6">
           <div className="inline-block">
             <span className="px-4 py-2 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-sm font-semibold">
-              🛡️ Powered by Advanced AI
+              Powered by Advanced Detection
             </span>
           </div>
         </div>
@@ -51,10 +51,10 @@ function Home() {
 
         <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
           <Link to="/email-analyzer" className="btn-primary">
-            📧 Analyze Email
+            Analyze Email
           </Link>
           <Link to="/url-analyzer" className="btn-primary">
-            🔗 Analyze URL
+            Analyze URL
           </Link>
         </div>
       </section>
@@ -125,7 +125,7 @@ function Home() {
       <section className="py-20 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl text-white text-center">
         <h2 className="text-4xl font-bold mb-6">Ready to Secure Your Inbox?</h2>
         <p className="text-lg mb-8 opacity-90">
-          Start analyzing suspicious emails and URLs right now with ThreatLens AI
+          Start analyzing suspicious emails and URLs right now with QuantShield
         </p>
         <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
           <Link to="/email-analyzer" className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">

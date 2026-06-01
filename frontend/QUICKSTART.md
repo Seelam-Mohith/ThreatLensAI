@@ -1,12 +1,12 @@
-# Quick Start Guide - ThreatLens AI Frontend
+# Quick Start Guide - QuantShield Frontend
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Node.js 16+ 
 - npm or yarn package manager
 - Backend API running on `http://localhost:5000` (optional for demo)
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Install Dependencies
 ```bash
@@ -27,7 +27,7 @@ npm run build
 npm run preview
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 frontend/
@@ -62,7 +62,7 @@ frontend/
 └── README.md                  # Full documentation
 ```
 
-## 🎨 Available Routes
+## Available Routes
 
 | Route | Component | Purpose |
 |-------|-----------|---------|
@@ -71,7 +71,7 @@ frontend/
 | `/url-analyzer` | URLAnalyzer | Check URL safety |
 | `/dashboard` | Dashboard | View analytics and model performance |
 
-## 🔧 Key Technologies
+## Key Technologies
 
 | Technology | Purpose |
 |-----------|---------|
@@ -83,7 +83,7 @@ frontend/
 | **Recharts** | Data visualization charts |
 | **Lucide React** | SVG icons |
 
-## 📝 Component Communication Flow
+## Component Communication Flow
 
 ```
 App (routing context)
@@ -105,7 +105,7 @@ App (routing context)
     └── Dashboard (charts & stats)
 ```
 
-## 🔌 API Integration Example
+## API Integration Example
 
 The app uses base API URL: `http://localhost:5000/api`
 
@@ -127,18 +127,18 @@ const stats = await dashboardApi.getStats();
 // Returns: { totalScans, phishingDetected, legitEmailsAnalyzed, bestModel, lastResult }
 ```
 
-## 🎯 Key Features
+## Key Features
 
-✅ **Responsive Design** - Works on all devices (mobile, tablet, desktop)
-✅ **Dark Mode Ready** - Tailwind dark mode support
-✅ **Loading States** - Spinner component for better UX
-✅ **Error Handling** - Graceful error messages
-✅ **Mock Data Fallback** - Works without backend API
-✅ **Model Leaderboard** - Compare 5 trained ML models
-✅ **Real-time Charts** - Interactive data visualization
-✅ **Mobile Navigation** - Responsive hamburger menu
+- **Responsive Design** - Works on all devices (mobile, tablet, desktop)
+- **Dark Mode Ready** - Tailwind dark mode support
+- **Loading States** - Spinner component for better UX
+- **Error Handling** - Graceful error messages
+- **Mock Data Fallback** - Works without backend API
+- **Model Leaderboard** - Compare multiple models
+- **Real-time Charts** - Interactive data visualization
+- **Mobile Navigation** - Responsive hamburger menu
 
-## 💾 Custom Tailwind Components
+## Custom Tailwind Components
 
 ```css
 /* Primary Action Button */
@@ -157,7 +157,7 @@ const stats = await dashboardApi.getStats();
 <button className="btn-small">Action</button>
 ```
 
-## 🌙 Dark Mode Usage
+## Dark Mode Usage
 
 Tailwind dark mode is enabled. Use `dark:` prefix:
 
@@ -167,7 +167,7 @@ Tailwind dark mode is enabled. Use `dark:` prefix:
 </div>
 ```
 
-## 📊 Dashboard Charts
+## Dashboard Charts
 
 - **Bar Chart**: Model F1 Score comparison
 - **Line Chart**: Weekly scan trends
@@ -175,7 +175,7 @@ Tailwind dark mode is enabled. Use `dark:` prefix:
 - **Bar Chart**: Model accuracy metrics
 - **Bar Chart**: Precision vs Recall
 
-## 🚨 Troubleshooting
+## Troubleshooting
 
 ### Port 3000 already in use
 ```bash
@@ -210,7 +210,7 @@ VITE_ENABLE_DARK_MODE=true
 VITE_ENABLE_CHARTS=true
 ```
 
-## 📦 Available Scripts
+## Available Scripts
 
 ```bash
 npm run dev      # Start development server
@@ -218,7 +218,7 @@ npm run build    # Build for production
 npm run preview  # Preview production build
 ```
 
-## 📚 Component Exports
+## Component Exports
 
 All components are functional and use React hooks:
 
@@ -235,7 +235,7 @@ export const urlApi = { ... }
 export const dashboardApi = { ... }
 ```
 
-## 🎓 Learning Resources
+## Learning Resources
 
 - [React Documentation](https://react.dev)
 - [Tailwind CSS](https://tailwindcss.com)
@@ -243,13 +243,13 @@ export const dashboardApi = { ... }
 - [Recharts](https://recharts.org)
 - [Vite Guide](https://vitejs.dev)
 
-## 👨‍💻 Next Steps
+## Next Steps
 
-1. ✅ Install dependencies: `npm install`
-2. ✅ Start dev server: `npm run dev`
-3. ✅ Open browser: `http://localhost:3000`
-4. ✅ Test email/URL analyzers with sample data
-5. ✅ Check dashboard for analytics
-6. ✅ Connect backend API when ready
+1. Install dependencies: `npm install`
+2. Start dev server: `npm run dev`
+3. Open browser: `http://localhost:3000`
+4. Test email/URL analyzers with sample data
+5. Check dashboard for analytics
+6. Connect backend API when ready
 
-Enjoy! 🎉
+Enjoy!

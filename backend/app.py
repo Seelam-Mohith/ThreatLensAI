@@ -1,17 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pathlib import Path
-import sys
-
-# Add ml module to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-# Import ML functions
-from ml.email.email_model import (
-    prepare_features,
-    train_models,
-    get_leaderboard
-)
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend
@@ -188,7 +177,7 @@ def health_check():
     """Health check endpoint"""
     return jsonify({
         'status': 'healthy',
-        'service': 'ThreatLens AI Backend',
+        'service': 'QuantShield Backend',
         'version': '1.0.0'
     }), 200
 
@@ -207,7 +196,7 @@ def internal_error(error):
 if __name__ == '__main__':
     print("""
     ╔════════════════════════════════════════╗
-    ║   ThreatLens AI - Backend Server       ║
+    ║   QuantShield - Backend Server         ║
     ║   Running on http://localhost:5000     ║
     ║   API Base: http://localhost:5000/api  ║
     ╚════════════════════════════════════════╝

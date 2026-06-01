@@ -1,6 +1,6 @@
-# ThreatLens AI 🛡️
+# QuantShield
 
-**An intelligent threat detection system for identifying phishing emails and malicious URLs using machine learning.**
+**An intelligent threat detection system for identifying phishing emails and malicious URLs.**
 
 <div align="center">
 
@@ -27,7 +27,7 @@
 
 ## 🎯 Overview
 
-ThreatLens AI is a comprehensive threat detection platform that leverages machine learning to identify and analyze phishing emails and malicious URLs. The system combines advanced ML models with an intuitive web interface to provide real-time threat analysis and reporting.
+QuantShield is a comprehensive threat detection platform that identifies and analyzes phishing emails and malicious URLs. The system combines detection logic with an intuitive web interface to provide real-time threat analysis and reporting.
 
 ### Key Capabilities
 
@@ -109,7 +109,7 @@ ThreatLens AI is a comprehensive threat detection platform that leverages machin
 ## 📁 Project Structure
 
 ```
-ThreatLens AI/
+QuantShield/
 ├── backend/                    # Flask backend service
 │   ├── app.py                 # Main Flask application
 │   ├── requirements.txt        # Python dependencies
