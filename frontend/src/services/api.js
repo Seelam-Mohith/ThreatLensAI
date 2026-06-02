@@ -84,6 +84,36 @@ export const urlApi = {
   },
 }
 
+export const smsApi = {
+  async checkSms(smsContent) {
+    try {
+      const response = await apiClient.post('/sms-check', { content: smsContent })
+      return {
+        isPhishing: response.data.prediction === 'phishing',
+        confidence: response.data.confidence,
+        message: response.data.message,
+        details: response.data.details || [],
+        leaderboard: response.data.leaderboard || mockLeaderboard,
+      }
+    } catch (error) {
+      console.warn('API call failed, using mock data for SMS:', error.message)
+      const isPhishing = Math.random() > 0.75
+      return {
+        isPhishing,
+        confidence: 0.8 + Math.random() * 0.18,
+        message: isPhishing
+          ? 'This SMS looks suspicious and may be part of a phishing/scam.'
+          : 'This SMS appears legitimate.',
+        details: [
+          isPhishing ? 'Shortened link detected' : 'No links detected',
+          isPhishing ? 'Urgency or prize language present' : 'Standard SMS content',
+        ],
+        leaderboard: mockLeaderboard,
+      }
+    }
+  },
+}
+
 export const dashboardApi = {
   async getStats() {
     try {

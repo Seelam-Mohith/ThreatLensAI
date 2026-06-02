@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Mail, Globe, BarChart3, ArrowRight } from 'lucide-react'
+import { Mail, Globe, BarChart3, ArrowRight, MessageSquare } from 'lucide-react'
 
 function Home() {
   const [hoveredCard, setHoveredCard] = useState(null)
@@ -21,8 +21,15 @@ function Home() {
       color: 'from-purple-500 to-pink-500',
     },
     {
+      icon: MessageSquare,
+      title: 'SMS Analysis',
+      description: 'Analyze SMS messages for phishing and scam content',
+      link: '/sms-analyzer',
+      color: 'from-green-500 to-teal-500',
+    },
+    {
       icon: BarChart3,
-      title: 'Dashboard',
+          title: 'Model Statistics',
       description: 'View comprehensive statistics and model performance metrics',
       link: '/dashboard',
       color: 'from-orange-500 to-red-500',
@@ -55,6 +62,9 @@ function Home() {
           </Link>
           <Link to="/url-analyzer" className="btn-primary">
             Analyze URL
+          </Link>
+          <Link to="/sms-analyzer" className="btn-primary">
+            Analyze SMS
           </Link>
         </div>
       </section>
@@ -131,8 +141,11 @@ function Home() {
           <Link to="/email-analyzer" className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
             Analyze Email
           </Link>
+          <Link to="/sms-analyzer" className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            Analyze SMS
+          </Link>
           <Link to="/dashboard" className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition-colors">
-            View Dashboard
+            View Model Statistics
           </Link>
         </div>
       </section>

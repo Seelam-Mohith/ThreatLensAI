@@ -9,8 +9,9 @@ function Navbar() {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Email Analyzer', path: '/email-analyzer' },
+    { name: 'SMS Analyzer', path: '/sms-analyzer' },
     { name: 'URL Analyzer', path: '/url-analyzer' },
-    { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Model Statistics', path: '/dashboard' },
   ]
 
   const isActive = (path) => location.pathname === path

@@ -4,6 +4,7 @@ import Home from './pages/Home'
 import EmailAnalyzer from './pages/EmailAnalyzer'
 import URLAnalyzer from './pages/URLAnalyzer'
 import Dashboard from './pages/Dashboard'
+import SMSAnalyzer from './pages/SMSAnalyzer'
 import AnimatedBackground from './components/AnimatedBackground'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/email-analyzer" element={<EmailAnalyzer />} />
               <Route path="/url-analyzer" element={<URLAnalyzer />} />
+              <Route path="/sms-analyzer" element={<SMSAnalyzer />} />
               <Route path="/dashboard" element={<Dashboard />} />
             </Routes>
           </main>
