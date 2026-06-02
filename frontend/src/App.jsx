@@ -1,28 +1,34 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
 import Navbar from './components/Navbar'
-import Home from './pages/Home'
-import EmailAnalyzer from './pages/EmailAnalyzer'
-import URLAnalyzer from './pages/URLAnalyzer'
-import Dashboard from './pages/Dashboard'
-import SMSAnalyzer from './pages/SMSAnalyzer'
 import AnimatedBackground from './components/AnimatedBackground'
+import LoadingSpinner from './components/LoadingSpinner'
+
+// Lazy load pages for better performance
+const Home = lazy(() => import('./pages/Home'))
+const EmailAnalyzer = lazy(() => import('./pages/EmailAnalyzer'))
+const URLAnalyzer = lazy(() => import('./pages/URLAnalyzer'))
+const SMSAnalyzer = lazy(() => import('./pages/SMSAnalyzer'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="relative min-h-screen">
+      <div className="relative min-h-screen bg-black">
         <AnimatedBackground />
-        <div className="relative z-10 min-h-screen bg-gradient-to-br dark:from-gray-950 dark:to-gray-900 bg-transparent backdrop-blur-sm">
+        <div className="relative z-10 min-h-screen">
           <Navbar />
-          <main className="container mx-auto px-4 py-8">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/email-analyzer" element={<EmailAnalyzer />} />
-              <Route path="/url-analyzer" element={<URLAnalyzer />} />
-              <Route path="/sms-analyzer" element={<SMSAnalyzer />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-            </Routes>
-          </main>
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><LoadingSpinner /></div>}>
+            <main className="container mx-auto px-4 py-8">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/email-analyzer" element={<EmailAnalyzer />} />
+                <Route path="/url-analyzer" element={<URLAnalyzer />} />
+                <Route path="/sms-analyzer" element={<SMSAnalyzer />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+              </Routes>
+            </main>
+          </Suspense>
         </div>
       </div>
     </BrowserRouter>

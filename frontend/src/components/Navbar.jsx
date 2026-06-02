@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X, Shield } from 'lucide-react'
 
-function Navbar() {
+const Navbar = memo(function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const location = useLocation()
 
@@ -21,14 +21,9 @@ function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="relative">
-              {/* Gradient background badge */}
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl blur-lg opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-              {/* Shield icon container */}
-              <div className="relative bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-lg shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
+          <Link to="/" className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-lg shadow-lg">
+              <Shield className="w-6 h-6 text-white" />
             </div>
             <div className="flex flex-col">
               <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 leading-tight">QuantShield</span>
@@ -84,6 +79,6 @@ function Navbar() {
       </div>
     </nav>
   )
-}
+})
 
 export default Navbar

@@ -22,78 +22,43 @@ body {
 
 @layer components {
   .btn-primary {
-    @apply px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200;
+    @apply px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:shadow-lg transition-shadow duration-300 will-change-transform;
   }
 
   .btn-secondary {
-    @apply px-6 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-semibold hover:shadow-lg transition-all duration-200;
+    @apply px-6 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-semibold hover:shadow-lg transition-shadow duration-300;
   }
 
   .btn-small {
-    @apply px-4 py-2 rounded-md bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors;
+    @apply px-4 py-2 rounded-md bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors duration-200;
   }
 
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 transition-all duration-200 hover:shadow-xl;
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 transition-shadow duration-300 hover:shadow-xl will-change-transform;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-indigo-500 transition-colors;
+    @apply w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:border-indigo-500 transition-colors duration-200;
   }
 }
 
-/* Animated background blobs (subtle and slow) */
+/* Professional animated background with Vanta.NET */
 .animated-bg {
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-.animated-bg__blob {
-  position: absolute;
-  width: 45vmax;
-  height: 45vmax;
-  max-width: 1200px;
-  max-height: 1200px;
-  border-radius: 50%;
-  filter: blur(48px);
-  opacity: 0.38;
-  transform: translate3d(0,0,0);
-}
-.animated-bg__blob--one {
-  left: -10vmax;
-  top: -20vmax;
-  background: radial-gradient(circle at 30% 30%, rgba(15,23,42,0.95), rgba(15,23,42,0.6) 40%, rgba(15,23,42,0.12) 70%, transparent);
-  animation: floatOne 20s linear infinite;
-}
-.animated-bg__blob--two {
-  right: -15vmax;
-  top: 0vmax;
-  background: radial-gradient(circle at 70% 30%, rgba(55,48,163,0.85), rgba(55,48,163,0.52) 40%, rgba(55,48,163,0.12) 70%, transparent);
-  animation: floatTwo 24s linear infinite;
-}
-.animated-bg__blob--three {
-  left: 10vmax;
-  bottom: -15vmax;
-  background: radial-gradient(circle at 40% 60%, rgba(31,41,55,0.9), rgba(31,41,55,0.55) 40%, rgba(31,41,55,0.12) 70%, transparent);
-  animation: floatThree 28s linear infinite;
-  opacity: 0.34;
 }
 
-@keyframes floatOne {
-  0% { transform: translateY(0) translateX(0) scale(1); }
-  50% { transform: translateY(6vmax) translateX(3vmax) scale(1.05); }
-  100% { transform: translateY(0) translateX(0) scale(1); }
-}
-@keyframes floatTwo {
-  0% { transform: translateY(0) translateX(0) scale(1); }
-  50% { transform: translateY(-5vmax) translateX(-4vmax) scale(1.02); }
-  100% { transform: translateY(0) translateX(0) scale(1); }
-}
-@keyframes floatThree {
-  0% { transform: translateY(0) translateX(0) scale(1); }
-  50% { transform: translateY(-4vmax) translateX(2vmax) scale(1.03); }
-  100% { transform: translateY(0) translateX(0) scale(1); }
+/* Vanta.NET canvas styling */
+.animated-bg canvas {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
