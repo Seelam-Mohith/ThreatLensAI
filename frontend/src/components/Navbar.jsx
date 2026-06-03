@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Github, Shield } from 'lucide-react'
+import { Menu, X, Shield } from 'lucide-react'
 
-function Navbar() {
+const Navbar = memo(function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const location = useLocation()
 
@@ -21,9 +21,14 @@ function Navbar() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-            <Shield className="w-8 h-8 text-indigo-600" />
-            QuantShield
+          <Link to="/" className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-lg shadow-lg">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 leading-tight">QuantShield</span>
+              <span className="text-sm font-light text-gray-500 dark:text-gray-400 leading-tight">Threat Analysis</span>
+            </div>
           </Link>
 
           {/* Desktop Menu */}
@@ -41,18 +46,6 @@ function Navbar() {
                 {link.name}
               </Link>
             ))}
-          </div>
-
-          {/* GitHub Icon */}
-          <div className="hidden md:block">
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-700 dark:text-gray-300 hover:text-indigo-600 transition-colors"
-            >
-              <Github className="w-6 h-6" />
-            </a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -86,6 +79,6 @@ function Navbar() {
       </div>
     </nav>
   )
-}
+})
 
 export default Navbar

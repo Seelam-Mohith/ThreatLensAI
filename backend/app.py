@@ -1,24 +1,152 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pathlib import Path
+import pickle
+import os
+import joblib
+from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend
 
-# Store model leaderboard data
+# Initialize paths
+ML_EMAIL_PATH = Path(__file__).parent.parent / 'ml' / 'email'
+
+# Load SVM model for email analysis
+# Load SVM model for email analysis
+svm_model = None
+tfidf_vectorizer = None
+model_loaded = False
+
 LEADERBOARD_DATA = [
-    {'model': 'SVM (Linear, LinearSVC)', 'f1': 0.9845, 'accuracy': 0.9845, 'precision': 0.9845, 'recall': 0.9845},
-    {'model': 'Random Forest (n_estimators=50)', 'f1': 0.9821, 'accuracy': 0.9821, 'precision': 0.9821, 'recall': 0.9821},
-    {'model': 'Logistic Regression (L2)', 'f1': 0.9815, 'accuracy': 0.9815, 'precision': 0.9816, 'recall': 0.9815},
-    {'model': 'XGBoost Classifier', 'f1': 0.9572, 'accuracy': 0.9572, 'precision': 0.9577, 'recall': 0.9572},
-    {'model': 'Multinomial Naive Bayes', 'f1': 0.9593, 'accuracy': 0.9593, 'precision': 0.9599, 'recall': 0.9593},
+    {
+        'model': 'SVM (Linear, LinearSVC)',
+        'f1': 0.9845,
+        'accuracy': 0.9845,
+        'precision': 0.9845,
+        'recall': 0.9845
+    },
+    {
+        'model': 'Random Forest',
+        'f1': 0.9821,
+        'accuracy': 0.9821,
+        'precision': 0.9821,
+        'recall': 0.9821
+    },
+    {
+        'model': 'Logistic Regression',
+        'f1': 0.9815,
+        'accuracy': 0.9815,
+        'precision': 0.9816,
+        'recall': 0.9815
+    },
+    {
+        'model': 'XGBoost',
+        'f1': 0.9572,
+        'accuracy': 0.9572,
+        'precision': 0.9577,
+        'recall': 0.9572
+    }
 ]
+
+def load_email_model():
+    """Load SVM model and TF-IDF vectorizer"""
+    global svm_model, tfidf_vectorizer, model_loaded
+
+    if model_loaded:
+        return
+
+    try:
+        # Load SVM model
+        model_path = ML_EMAIL_PATH / 'svm_model.pkl'
+
+        if model_path.exists():
+            print(f"Loading SVM model from {model_path}...")
+            svm_model = joblib.load(model_path)
+            print("✓ SVM model loaded successfully")
+        else:
+            print(f"⚠ SVM model not found at {model_path}")
+
+        # Load Vectorizer
+        vectorizer_path = ML_EMAIL_PATH / 'vectorizer.pkl'
+
+        if vectorizer_path.exists():
+            print(f"Loading vectorizer from {vectorizer_path}...")
+            tfidf_vectorizer = joblib.load(vectorizer_path)
+            print("✓ TF-IDF vectorizer loaded successfully")
+        else:
+            print(f"⚠ Vectorizer not found at {vectorizer_path}")
+
+    except Exception as e:
+        print(f"✗ Error loading model files: {e}")
+
+    model_loaded = True
 
 # Simulated analysis function (uses ML model patterns)
 def analyze_email_content(email_content):
     """
-    Simulate email analysis using pattern matching.
-    For production, integrate with actual trained models.
+    Analyze email using SVM model or fallback to pattern matching if model unavailable
+    """
+    global svm_model
+    
+    # Lazy load model if not already loaded
+    if not model_loaded:
+        load_email_model()
+    
+    if svm_model is not None:
+        try:
+            # Try to use the loaded SVM model
+            if hasattr(svm_model, 'predict'):
+                # Reshape input for sklearn
+                email_vector = tfidf_vectorizer.transform([email_content])
+
+                prediction = svm_model.predict(email_vector)[0]
+                
+                # Get confidence score if available
+                if hasattr(svm_model, 'decision_function'):
+                    confidence_score = svm_model.decision_function(email_vector)[0]
+
+                    confidence = float(
+                        1 / (1 + np.exp(-abs(confidence_score)))
+                )
+
+                confidence = round(confidence, 3)
+                
+                is_phishing = bool(prediction == 1 or prediction == 'phishing')
+                
+                details = []
+                if is_phishing:
+                    details = [
+                        'SVM model detected phishing characteristics',
+                        'Suspicious email patterns identified',
+                        'Recommended: Do not click links or download attachments'
+                    ]
+                else:
+                    details = [
+                        'SVM model classified as legitimate',
+                        'Email appears to be from trusted source',
+                        'Standard communication patterns detected'
+                    ]
+                
+                return {
+                    'is_phishing': is_phishing,
+                    'confidence': confidence,
+                    'details': details,
+                    'model_used': 'SVM (Linear, LinearSVC)',
+                    'matches': 1 if is_phishing else 0
+                }
+        except Exception as e:
+            print(f"⚠ SVM prediction error: {e}, falling back to pattern analysis")
+            # Fallback to pattern matching
+            return analyze_email_pattern(email_content)
+    else:
+        # Fallback to pattern matching if model not loaded
+        return analyze_email_pattern(email_content)
+
+def analyze_email_pattern(email_content):
+    """
+    Fallback pattern-based email analysis
     """
     suspicious_keywords = [
         'verify account', 'confirm identity', 'urgent', 'click here',
@@ -47,6 +175,7 @@ def analyze_email_content(email_content):
         'is_phishing': is_phishing,
         'confidence': confidence,
         'details': details,
+        'model_used': 'Pattern Analysis Engine (Fallback)',
         'matches': matches
     }
 
@@ -109,7 +238,7 @@ def email_check():
             ),
             'details': analysis['details'],
             'leaderboard': LEADERBOARD_DATA,
-            'model_used': 'Pattern Analysis Engine'
+            'model_used': analysis.get('model_used', 'Pattern Analysis Engine')
         }), 200
     
     except Exception as e:
