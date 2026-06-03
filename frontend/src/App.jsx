@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 import AnimatedBackground from './components/AnimatedBackground'
 import LoadingSpinner from './components/LoadingSpinner'
 
@@ -29,6 +30,7 @@ function App() {
               </Routes>
             </main>
           </Suspense>
+          <Footer />
         </div>
       </div>
     </BrowserRouter>
