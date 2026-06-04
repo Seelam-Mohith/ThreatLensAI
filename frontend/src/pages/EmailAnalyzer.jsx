@@ -127,6 +127,11 @@ function EmailAnalyzer() {
   const showExplanation = hasUsableExplanation(result?.explanation)
   const explanation = parseExplanation(showExplanation ? result?.explanation : '')
   const summaryContent = buildSummaryPoints(explanation.summary)
+  const explanationBadge = result?.explanationSource === 'gemini'
+    ? 'Gemini Insight'
+    : result?.explanationSource === 'local_fallback'
+      ? 'Local Fallback'
+      : 'Analysis Insight'
   const confidenceSummary = typeof result?.confidence === 'number'
     ? `This email is ${result?.isPhishing ? 'flagged as phishing' : 'considered safe'} with a confidence score of ${(result.confidence * 100).toFixed(1)}%.`
     : ''
@@ -226,12 +231,17 @@ function EmailAnalyzer() {
                     AI Security Analysis
                   </h3>
                   <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
-                    Gemini Insight
+                    {explanationBadge}
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                   Additional context generated from the scan result and email content.
                 </p>
+                {result?.explanationNote && (
+                  <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+                    {result.explanationNote}
+                  </p>
+                )}
               </div>
             </div>
 

@@ -28,6 +28,8 @@ export const emailApi = {
         confidence: response.data.confidence,
         message: response.data.message,
         explanation: response.data.ai_explanation || '',
+        explanationSource: response.data.explanation_source || 'unknown',
+        explanationNote: response.data.explanation_note || '',
         details: response.data.details || [],
         leaderboard: response.data.leaderboard || mockLeaderboard,
         modelUsed: response.data.model_used || '',
@@ -45,6 +47,8 @@ export const emailApi = {
         explanation: isPhishing
           ? 'This message uses common phishing patterns like urgency and credential requests.'
           : 'This message looks routine and does not show obvious phishing indicators.',
+        explanationSource: 'demo',
+        explanationNote: 'Backend API unavailable.',
         details: [
           isPhishing ? 'Suspicious sender domain' : 'Verified sender',
           isPhishing ? 'Unknown links detected' : 'No suspicious links',
