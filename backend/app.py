@@ -1,3 +1,7 @@
+from email.mime import message
+from unittest import result
+from unittest import result
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from pathlib import Path
@@ -6,6 +10,7 @@ import joblib
 import numpy as np
 from dotenv import load_dotenv
 from google import genai
+import re
 
 ENV_PATH = Path(__file__).with_name(".env")
 load_dotenv(dotenv_path=ENV_PATH)
@@ -20,22 +25,89 @@ if GEMINI_API_KEY:
     except Exception as e:
         print(f"Failed to initialize Gemini client: {e}")
 
+
+def build_local_explanation(email_content, prediction, confidence):
+    normalized = (email_content or "").lower()
+    risk_level = "high" if prediction == "phishing" else "low"
+
+    suspicious_signals = []
+
+    signal_checks = [
+        ("urgent" in normalized or "immediately" in normalized or "asap" in normalized,
+         "Uses urgency to pressure a quick response."),
+        ("verify" in normalized or "confirm" in normalized or "password" in normalized or "credential" in normalized,
+         "Requests verification, credentials, or sensitive account action."),
+        ("click here" in normalized or "login" in normalized or "signin" in normalized,
+         "Pushes the reader toward a link or login flow."),
+        ("attachment" in normalized or "download" in normalized,
+         "References attachments or downloads that should be treated carefully."),
+        ("gift card" in normalized or "bank" in normalized or "invoice" in normalized or "payment" in normalized,
+         "Touches money, billing, or other high-impact account themes."),
+    ]
+
+    for matched, description in signal_checks:
+        if matched:
+            suspicious_signals.append(description)
+
+    if not suspicious_signals:
+        if prediction == "phishing":
+            suspicious_signals.append("The detection engine found phishing-like text patterns in the message.")
+        else:
+            suspicious_signals.append("The message does not show the common urgency, credential, or link patterns usually seen in phishing emails.")
+
+    recommended_actions = (
+        [
+            "Do not click links, open attachments, or reply with credentials.",
+            "Verify the request through a trusted channel before taking action.",
+            "Report the message to your security team or mail provider if it looks suspicious.",
+        ]
+        if prediction == "phishing"
+        else
+        [
+            "No obvious phishing indicators were detected in this scan.",
+            "Still confirm the sender and link targets before sharing sensitive information.",
+            "Keep standard caution if the email asks for payments, passwords, or attachments.",
+        ]
+    )
+
+    summary = (
+        f"This email was classified as {prediction} with {confidence:.0%} confidence."
+        f" The current risk level is {risk_level}."
+    )
+
+    sections = [
+        "Why it was classified this way:",
+        *[f"- {signal}" for signal in suspicious_signals[:3]],
+        "Risk level:",
+        f"- {risk_level.capitalize()} risk based on the detection result and the language found in the message.",
+        "What you should do:",
+        *[f"- {action}" for action in recommended_actions],
+    ]
+
+    return "\n".join([summary, "", *sections])
+
+
+def explain_fallback_reason(error):
+    error_text = str(error)
+
+    if "RESOURCE_EXHAUSTED" in error_text or "429" in error_text or "quota" in error_text.lower():
+        retry_match = re.search(r"retry(?: in)?\s+(\d+(?:\.\d+)?)s", error_text, flags=re.IGNORECASE)
+        retry_suffix = f" Retry after about {retry_match.group(1)} seconds." if retry_match else ""
+        return f"Gemini quota reached.{retry_suffix}"
+
+    return "Gemini explanation unavailable."
+
 def generate_ai_explanation(
     email_content,
     prediction,
     confidence
 ):
     if client is None:
-        risk_level = "high" if prediction == "phishing" else "low"
-        action = (
-            "Do not click links or share credentials."
-            if prediction == "phishing"
-            else "No obvious phishing signals were detected, but keep normal caution."
-        )
-        return (
-            f"Classified as {prediction} with {confidence:.0%} confidence. "
-            f"Risk level is {risk_level}. {action}"
-        )
+        return {
+            'text': build_local_explanation(email_content, prediction, confidence),
+            'source': 'local_fallback',
+            'note': 'Gemini client is not configured.',
+        }
     
     prompt = f"""
     You are a cybersecurity analyst.
@@ -65,12 +137,17 @@ def generate_ai_explanation(
         )
     except Exception as e:
         print(f"Gemini explanation failed: {e}")
-        return (
-            f"Classified as {prediction} with {confidence:.0%} confidence. "
-            "AI explanation is currently unavailable."
-        )
+        return {
+            'text': build_local_explanation(email_content, prediction, confidence),
+            'source': 'local_fallback',
+            'note': explain_fallback_reason(e),
+        }
 
-    return response.text
+    return {
+        'text': response.text,
+        'source': 'gemini',
+        'note': '',
+    }
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend
@@ -246,6 +323,101 @@ def analyze_email_pattern(email_content):
         'model_used': 'Pattern Analysis Engine (Fallback)',
         'matches': matches
     }
+    
+ML_SMS_PATH = Path(__file__).parent.parent / 'ml' / 'sms'
+
+sms_model = None
+sms_vectorizer = None
+sms_label_encoder = None
+sms_model_loaded = False
+
+def load_sms_model():
+
+    global sms_model
+    global sms_vectorizer
+    global sms_label_encoder
+    global sms_model_loaded
+
+    if sms_model_loaded:
+        return
+
+    try:
+
+        sms_model = joblib.load(
+            ML_SMS_PATH / "svm_model_SMS.pkl"
+        )
+
+        sms_vectorizer = joblib.load(
+            ML_SMS_PATH / "vectorizer_SMS.pkl"
+        )
+
+        sms_label_encoder = joblib.load(
+            ML_SMS_PATH / "label_encoder_SMS.pkl"
+        )
+
+        print("SMS model loaded successfully")
+        print("Classes:", sms_label_encoder.classes_)
+
+    except Exception as e:
+        print(f"SMS model load error: {e}")
+
+    sms_model_loaded = True
+    
+def analyze_sms_content(message):
+
+    global sms_model
+
+    if not sms_model_loaded:
+        load_sms_model()
+
+    try:
+
+        vector = sms_vectorizer.transform([message])
+
+        prediction = sms_model.predict(vector)
+
+        print("Raw prediction:", prediction)
+
+        result = sms_label_encoder.inverse_transform(
+        prediction
+        )[0]
+
+        print("Decoded prediction:", result)
+
+        is_spam = (result == 1)
+
+        print("Is spam:", is_spam)
+
+        scores = sms_model.decision_function(vector)
+
+        print("Scores:", scores)
+
+        exp_scores = np.exp(scores)
+
+        probs = exp_scores / np.sum(exp_scores)
+
+        confidence = round(
+            float(np.max(probs)),
+            3
+        )
+
+        print("Confidence:", confidence)
+
+        return {
+            "is_spam": is_spam,
+            "prediction": result,
+            "confidence": confidence
+        }
+
+    except Exception as e:
+
+        print(f"SMS Prediction Error: {e}")
+
+        return {
+            "is_spam": False,
+            "prediction": "unknown",
+            "confidence": 0
+        }
 
 def analyze_url(url):
     """
@@ -302,7 +474,7 @@ def email_check():
             else "safe"
         )
 
-        ai_explanation = generate_ai_explanation(
+        explanation_result = generate_ai_explanation(
             email_content,
             prediction,
             analysis["confidence"]
@@ -318,7 +490,9 @@ def email_check():
                 else 'This email appears to be legitimate. It\'s generally safe to open.'
             ),
 
-            'ai_explanation': ai_explanation,
+            'ai_explanation': explanation_result['text'],
+            'explanation_source': explanation_result['source'],
+            'explanation_note': explanation_result['note'],
 
             'details': analysis['details'],
 
@@ -332,6 +506,51 @@ def email_check():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/sms-check', methods=['POST'])
+def sms_check():
+
+    try:
+
+        data = request.get_json()
+
+        print("SMS Request:", data)
+
+        message = data.get('content', '')
+
+        print("Message:", message)
+
+        if not message:
+            return jsonify({
+                'error': 'SMS content required'
+            }), 400
+
+        analysis = analyze_sms_content(message)
+
+        return jsonify({
+
+            'prediction':
+                'spam'
+                if analysis['is_spam']
+                else 'ham',
+
+            'confidence':
+                analysis['confidence'],
+
+            'message':
+                'Spam SMS detected'
+                if analysis['is_spam']
+                else 'Legitimate SMS',
+
+            'model_used':
+                'SVM SMS Classifier'
+        })
+
+    except Exception as e:
+
+        return jsonify({
+            'error': str(e)
+        }), 500
 
 @app.route('/api/url-check', methods=['POST'])
 def url_check():
