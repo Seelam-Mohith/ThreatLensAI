@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { MessageSquare, AlertCircle } from 'lucide-react'
 import LoadingSpinner from '../components/LoadingSpinner'
+import AIInsightCard from '../components/AIInsightCard'
 import ResultCard from '../components/ResultCard'
 import LeaderboardTable from '../components/LeaderboardTable'
 import { useEmailAnalysis } from '../hooks/useAnalysis'
@@ -86,6 +87,7 @@ function SMSAnalyzer() {
       )}
       
       <ResultCard result={result} isLoading={loading} />
+      <AIInsightCard result={result} artifactLabel="SMS" />
 
       {result && result.leaderboard && (
         <LeaderboardTable data={result.leaderboard} highlight="SVM (Linear, LinearSVC)" />

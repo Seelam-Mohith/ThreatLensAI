@@ -87,6 +87,72 @@ def build_local_explanation(email_content, prediction, confidence):
     return "\n".join([summary, "", *sections])
 
 
+def build_local_sms_explanation(message_content, prediction, confidence):
+    normalized = (message_content or "").lower()
+    risk_level = "high" if prediction == "spam" else "low"
+
+    suspicious_signals = []
+    signal_checks = [
+        (
+            any(keyword in normalized for keyword in ["urgent", "immediately", "act now", "limited time"]),
+            "Uses urgency to pressure a quick response."
+        ),
+        (
+            any(keyword in normalized for keyword in ["verify", "confirm", "password", "otp", "bank details", "account"]),
+            "Requests verification, account details, or other sensitive information."
+        ),
+        (
+            any(keyword in normalized for keyword in ["http://", "https://", "bit.ly", "tinyurl", "link"]),
+            "Pushes the reader toward a link or external action."
+        ),
+        (
+            any(keyword in normalized for keyword in ["refund", "income tax", "work from home", "whatsapp", "earn ₹", "earn rs"]),
+            "Touches common scam themes like refunds, fake jobs, or money offers."
+        ),
+    ]
+
+    for matched, description in signal_checks:
+        if matched:
+            suspicious_signals.append(description)
+
+    if not suspicious_signals:
+        if prediction == "spam":
+            suspicious_signals.append("The detection engine found scam-like wording patterns in the SMS.")
+        else:
+            suspicious_signals.append("The message does not show the common urgency, credential, or malicious-link patterns usually seen in scam SMS messages.")
+
+    recommended_actions = (
+        [
+            "Do not click links, reply with personal information, or contact the sender on untrusted numbers.",
+            "Verify the claim using an official website or phone number before taking action.",
+            "Report and delete the SMS if it appears fraudulent."
+        ]
+        if prediction == "spam"
+        else
+        [
+            "No strong scam indicators were detected in this scan.",
+            "Still avoid sharing OTPs, passwords, or banking information by SMS.",
+            "Confirm unexpected payment or account requests through an official channel."
+        ]
+    )
+
+    summary = (
+        f"This SMS was classified as {prediction} with {confidence:.0%} confidence."
+        f" The current risk level is {risk_level}."
+    )
+
+    sections = [
+        "Why it was classified this way:",
+        *[f"- {signal}" for signal in suspicious_signals[:3]],
+        "Risk level:",
+        f"- {risk_level.capitalize()} risk based on the detection result and the language found in the message.",
+        "What you should do:",
+        *[f"- {action}" for action in recommended_actions],
+    ]
+
+    return "\n".join([summary, "", *sections])
+
+
 def explain_fallback_reason(error):
     error_text = str(error)
 
@@ -139,6 +205,59 @@ def generate_ai_explanation(
         print(f"Gemini explanation failed: {e}")
         return {
             'text': build_local_explanation(email_content, prediction, confidence),
+            'source': 'local_fallback',
+            'note': explain_fallback_reason(e),
+        }
+
+    return {
+        'text': response.text,
+        'source': 'gemini',
+        'note': '',
+    }
+
+
+def generate_ai_sms_explanation(
+    message_content,
+    prediction,
+    confidence
+):
+    if client is None:
+        return {
+            'text': build_local_sms_explanation(message_content, prediction, confidence),
+            'source': 'local_fallback',
+            'note': 'Gemini client is not configured.',
+        }
+
+    prompt = f"""
+    You are a cybersecurity analyst.
+
+    SMS:
+    {message_content}
+
+    Prediction:
+    {prediction}
+
+    Confidence:
+    {confidence:.2%}
+
+    Explain:
+    1. Why this SMS was classified this way.
+    2. Risk level.
+    3. What the user should do.
+
+    Keep response under 100 words.
+    Use simple language.
+    """
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+    except Exception as e:
+        print(f"Gemini SMS explanation failed: {e}")
+        return {
+            'text': build_local_sms_explanation(message_content, prediction, confidence),
             'source': 'local_fallback',
             'note': explain_fallback_reason(e),
         }
@@ -598,13 +717,16 @@ def sms_check():
             }), 400
 
         analysis = analyze_sms_content(message)
+        prediction = 'spam' if analysis['is_spam'] else 'ham'
+        explanation_result = generate_ai_sms_explanation(
+            message,
+            prediction,
+            analysis['confidence']
+        )
 
         return jsonify({
 
-            'prediction':
-                'spam'
-                if analysis['is_spam']
-                else 'ham',
+            'prediction': prediction,
 
             'confidence':
                 analysis['confidence'],
@@ -613,6 +735,10 @@ def sms_check():
                 'Spam SMS detected'
                 if analysis['is_spam']
                 else 'Legitimate SMS',
+
+            'ai_explanation': explanation_result['text'],
+            'explanation_source': explanation_result['source'],
+            'explanation_note': explanation_result['note'],
 
             'details': analysis.get('details', []),
 

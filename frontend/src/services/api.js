@@ -109,6 +109,9 @@ export const smsApi = {
         isPhishing: response.data.prediction === 'spam',
         confidence: response.data.confidence || 0,
         message: response.data.message || '',
+        explanation: response.data.ai_explanation || '',
+        explanationSource: response.data.explanation_source || 'unknown',
+        explanationNote: response.data.explanation_note || '',
         details: response.data.details || [],
         leaderboard: response.data.leaderboard || mockLeaderboard,
         modelUsed: response.data.model_used || 'SVM SMS Classifier',
@@ -130,6 +133,12 @@ export const smsApi = {
         message: isPhishing
           ? 'This SMS looks suspicious and may be part of a phishing/scam.'
           : 'This SMS appears legitimate.',
+
+        explanation: isPhishing
+          ? 'This SMS uses scam-style patterns such as money bait, urgent action, or requests to continue on another channel.'
+          : 'This SMS looks routine and does not show strong scam indicators in the fallback demo analysis.',
+        explanationSource: 'demo',
+        explanationNote: 'Backend API unavailable.',
 
         details: [
           isPhishing
