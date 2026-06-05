@@ -384,7 +384,17 @@ def analyze_sms_content(message):
 
         print("Decoded prediction:", result)
 
-        is_spam = (result == 1)
+        if isinstance(result, (int, np.integer)):
+            class_id = int(result)
+            normalized_result = "ham" if class_id == 0 else "spam"
+        else:
+            normalized_result = str(result).strip().lower()
+            class_id = None
+            if normalized_result.isdigit():
+                class_id = int(normalized_result)
+                normalized_result = "ham" if class_id == 0 else "spam"
+
+        is_spam = normalized_result in {"spam", "smishing", "scam"}
 
         print("Is spam:", is_spam)
 
@@ -403,10 +413,67 @@ def analyze_sms_content(message):
 
         print("Confidence:", confidence)
 
+        message_lower = message.lower()
+        details = []
+
+        suspicious_rules = [
+            (
+                any(keyword in message_lower for keyword in ["work from home", "earn rs", "earn ₹", "earn money", "/week"]),
+                "Income bait or unrealistic earning claim detected.",
+            ),
+            (
+                any(keyword in message_lower for keyword in ["whatsapp", "apply now", "resume online", "selected candidate"]),
+                "Recruitment-style call to action matches common scam outreach.",
+            ),
+            (
+                any(keyword in message_lower for keyword in ["refund", "income tax", "tax department", "submit bank details"]),
+                "Government or refund impersonation language is present.",
+            ),
+            (
+                any(keyword in message_lower for keyword in ["bank details", "account", "password", "otp", "verify", "confirm"]),
+                "Sensitive account or verification language is present.",
+            ),
+            (
+                any(keyword in message_lower for keyword in ["click", "link", "bit.ly", "tinyurl", "http://", "https://"]),
+                "The message contains a link or link-like call to action.",
+            ),
+            (
+                any(keyword in message_lower for keyword in ["urgent", "immediately", "act now", "limited time"]),
+                "Urgency language detected in the SMS.",
+            ),
+        ]
+
+        rule_hits = 0
+        for matched, description in suspicious_rules:
+            if matched:
+                rule_hits += 1
+                details.append(description)
+
+        if not is_spam and rule_hits >= 2:
+            is_spam = True
+            normalized_result = "spam"
+            confidence = max(confidence, min(0.95, 0.55 + (rule_hits * 0.1)))
+            details.insert(0, "Rule-based safety override triggered because multiple scam indicators were found.")
+
+        if not details:
+            details = (
+                [
+                    "The SMS matches spam-like wording patterns learned by the model.",
+                    "Treat links, reply requests, and personal data prompts with caution.",
+                ]
+                if is_spam
+                else [
+                    "No strong scam indicators were surfaced in this SMS.",
+                    "The wording looks closer to normal conversational or transactional text.",
+                ]
+            )
+
         return {
             "is_spam": is_spam,
-            "prediction": result,
-            "confidence": confidence
+            "prediction": normalized_result,
+            "confidence": confidence,
+            "details": details[:3],
+            "model_used": "SVM SMS Classifier",
         }
 
     except Exception as e:
@@ -416,7 +483,12 @@ def analyze_sms_content(message):
         return {
             "is_spam": False,
             "prediction": "unknown",
-            "confidence": 0
+            "confidence": 0,
+            "details": [
+                "The SMS model could not complete analysis.",
+                "A fallback result was returned without detailed findings.",
+            ],
+            "model_used": "SVM SMS Classifier",
         }
 
 def analyze_url(url):
@@ -542,8 +614,12 @@ def sms_check():
                 if analysis['is_spam']
                 else 'Legitimate SMS',
 
+            'details': analysis.get('details', []),
+
+            'leaderboard': LEADERBOARD_DATA,
+
             'model_used':
-                'SVM SMS Classifier'
+                analysis.get('model_used', 'SVM SMS Classifier')
         })
 
     except Exception as e:

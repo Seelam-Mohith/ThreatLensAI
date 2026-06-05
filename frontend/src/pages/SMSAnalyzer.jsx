@@ -84,7 +84,7 @@ function SMSAnalyzer() {
           </div>
         </div>
       )}
-
+      
       <ResultCard result={result} isLoading={loading} />
 
       {result && result.leaderboard && (
