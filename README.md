@@ -164,7 +164,3 @@ The application will be available locally through the Vite development server.
 **Seelam Mohith**
 
 GitHub: https://github.com/Seelam-Mohith
-
-## License
-
-This project is licensed under the MIT License.
