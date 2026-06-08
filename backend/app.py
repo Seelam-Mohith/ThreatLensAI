@@ -444,11 +444,14 @@ def analyze_email_pattern(email_content):
     }
     
 ML_SMS_PATH = Path(__file__).parent.parent / 'ml' / 'sms'
+ML_URL_PATH = Path(__file__).parent.parent / 'ml' / 'url'
 
 sms_model = None
 sms_vectorizer = None
 sms_label_encoder = None
 sms_model_loaded = False
+url_model = None
+url_model_loaded = False
 
 def load_sms_model():
 
@@ -610,11 +613,65 @@ def analyze_sms_content(message):
             "model_used": "SVM SMS Classifier",
         }
 
+def load_url_model():
+    global url_model
+    global url_model_loaded
+
+    if url_model_loaded:
+        return
+
+    try:
+        model_path = ML_URL_PATH / "model.pkl"
+
+        if model_path.exists():
+            print(f"Loading URL model from {model_path}...")
+            url_model = joblib.load(model_path)
+            print("URL model loaded successfully")
+        else:
+            print(f"Warning: URL model not found at {model_path}")
+    except Exception as e:
+        print(f"URL model load error: {e}")
+
+    url_model_loaded = True
+
 def analyze_url(url):
     """
-    Simulate URL analysis using pattern matching.
-    For production, integrate with actual threat intelligence.
+    Analyze a URL using the trained URL model with a pattern fallback.
     """
+    global url_model
+
+    if not url_model_loaded:
+        load_url_model()
+
+    if url_model is not None:
+        try:
+            prediction = int(url_model.predict([url])[0])
+            probabilities = url_model.predict_proba([url])[0]
+            confidence = round(float(max(probabilities)), 3)
+            is_phishing = prediction == 1
+
+            details = (
+                [
+                    "The trained URL model found phishing-like characteristics.",
+                    "Treat this link carefully before opening it.",
+                ]
+                if is_phishing
+                else [
+                    "The trained URL model classified this link as legitimate.",
+                    "No strong phishing signal was surfaced by the model.",
+                ]
+            )
+
+            return {
+                'is_phishing': is_phishing,
+                'confidence': confidence,
+                'details': details,
+                'matches': 1 if is_phishing else 0,
+                'model_used': 'URL Classifier Model'
+            }
+        except Exception as e:
+            print(f"URL prediction error: {e}, falling back to pattern analysis")
+
     suspicious_patterns = [
         'bit.ly', 'tinyurl', 'short.link',  # URL shorteners
         'login', 'verify', 'confirm', 'update',  # Suspicious keywords
@@ -641,7 +698,8 @@ def analyze_url(url):
         'is_phishing': is_phishing,
         'confidence': confidence,
         'details': details,
-        'matches': matches
+        'matches': matches,
+        'model_used': 'Pattern Analysis Engine (Fallback)'
     }
 
 # ============ API ENDPOINTS ============
@@ -777,7 +835,7 @@ def url_check():
             ),
             'details': analysis['details'],
             'leaderboard': LEADERBOARD_DATA,
-            'model_used': 'URL Threat Analysis Engine'
+            'model_used': analysis.get('model_used', 'URL Threat Analysis Engine')
         }), 200
     
     except Exception as e:
