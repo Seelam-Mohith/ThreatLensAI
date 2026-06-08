@@ -1,4 +1,4 @@
-# QuantShield
+# QuantShield - AI Based Threat Detection Platform
 **An intelligent threat detection system for identifying phishing emails and malicious URLs.**
 
 QuantShield is an intelligent cybersecurity platform designed to detect phishing emails and malicious URLs using machine learning. The system combines trained classification models with a modern web interface to provide real-time threat analysis, risk assessment, and detailed detection reports.
