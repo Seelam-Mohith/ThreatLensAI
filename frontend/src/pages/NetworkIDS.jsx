@@ -1,108 +1,74 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Activity, Play, Shield, Square, Upload, Wifi } from 'lucide-react'
-
-const samplePackets = [
-  {
-    time: '12:04:11',
-    source: '192.168.1.24',
-    destination: '172.217.160.78',
-    protocol: 'HTTPS',
-    status: 'safe',
-    note: 'Normal encrypted web session',
-  },
-  {
-    time: '12:04:18',
-    source: '10.0.0.45',
-    destination: '185.220.101.4',
-    protocol: 'TCP',
-    status: 'suspicious',
-    note: 'Unexpected outbound beacon pattern',
-  },
-  {
-    time: '12:04:25',
-    source: '192.168.1.38',
-    destination: '8.8.8.8',
-    protocol: 'DNS',
-    status: 'safe',
-    note: 'Known resolver query',
-  },
-  {
-    time: '12:04:31',
-    source: '10.0.0.17',
-    destination: '203.0.113.92',
-    protocol: 'HTTP',
-    status: 'suspicious',
-    note: 'Clear-text request to unknown host',
-  },
-  {
-    time: '12:04:37',
-    source: '192.168.1.90',
-    destination: '151.101.1.69',
-    protocol: 'TLS',
-    status: 'safe',
-    note: 'Trusted software update traffic',
-  },
-]
+import { useMemo, useState } from 'react'
+import { Activity, AlertCircle, FileUp, Shield, Upload, Wifi } from 'lucide-react'
+import LoadingSpinner from '../components/LoadingSpinner'
+import { networkApi } from '../services/api'
 
 function NetworkIDS() {
-  const [isCapturing, setIsCapturing] = useState(false)
-  const [capturedPackets, setCapturedPackets] = useState([])
-  const [captureIndex, setCaptureIndex] = useState(0)
+  const [selectedFile, setSelectedFile] = useState(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [pcapFile, setPcapFile] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [result, setResult] = useState(null)
+
+  const isValidCapture = (file) => {
+    if (!file) return false
+    const lowerName = file.name.toLowerCase()
+    return lowerName.endsWith('.pcap') || lowerName.endsWith('.pcapng')
+  }
 
   const handleFileSelection = (file) => {
-    if (!file) return
-    const isPcapFile = file.name.toLowerCase().endsWith('.pcap')
-    if (!isPcapFile) return
-    setPcapFile(file)
-    setIsDragging(false)
+    if (!isValidCapture(file)) {
+      setError('Please select a .pcap or .pcapng capture file.')
+      setSelectedFile(null)
+      setResult(null)
+      return
+    }
+
+    setError(null)
+    setSelectedFile(file)
+    setResult(null)
   }
 
   const handleDrop = (event) => {
     event.preventDefault()
     setIsDragging(false)
-    const file = event.dataTransfer.files?.[0]
-    handleFileSelection(file)
+    handleFileSelection(event.dataTransfer.files?.[0])
   }
 
-  useEffect(() => {
-    if (!isCapturing) return undefined
-
-    const interval = setInterval(() => {
-      const packet = samplePackets[captureIndex % samplePackets.length]
-      setCapturedPackets((current) => [packet, ...current].slice(0, 6))
-      setCaptureIndex((current) => current + 1)
-    }, 1400)
-
-    return () => clearInterval(interval)
-  }, [captureIndex, isCapturing])
-
-  const latestPacket = capturedPackets[0]
-
-  const prediction = useMemo(() => {
-    if (!latestPacket) {
-      return {
-        label: 'Waiting for traffic',
-        verdict: 'Start capture to view the model prediction for incoming network activity.',
-        tone: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200',
-      }
+  const handleAnalyze = async () => {
+    if (!selectedFile) {
+      setError('Please select a capture file before analyzing.')
+      return
     }
 
-    if (latestPacket.status === 'suspicious') {
-      return {
-        label: 'Potential intrusion detected',
-        verdict: 'Not safe to open. The flow shows unusual behavior and should be investigated.',
-        tone: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-200',
-      }
+    setLoading(true)
+    setError(null)
+
+    try {
+      const analysis = await networkApi.analyzeCapture(selectedFile)
+      setResult(analysis)
+    } catch (analysisError) {
+      setError(analysisError.message || 'Network analysis failed.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleClear = () => {
+    setSelectedFile(null)
+    setResult(null)
+    setError(null)
+  }
+
+  const summaryTone = useMemo(() => {
+    if (!result) {
+      return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
     }
 
-    return {
-      label: 'Traffic appears legitimate',
-      verdict: 'Safe to open. The captured packet matches expected network behavior.',
-      tone: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200',
-    }
-  }, [latestPacket])
+    return result.isIntrusion
+      ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-200'
+      : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200'
+  }, [result])
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -112,133 +78,127 @@ function NetworkIDS() {
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Network Intrusion Detection</h1>
         </div>
         <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl">
-          Monitor captured network activity and view a model-backed verdict on whether the observed connection looks safe or suspicious.
+          Upload a `.pcap` or `.pcapng` capture to run the backend network IDS model and review the flow-level verdicts.
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-8">
+      <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-8">
         <section className="card">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Live Capture Console</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Capture Analysis</h2>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Start a session to populate the captured traffic tab below.
+                The backend extracts flows, aligns features, and scores the capture with the trained model.
               </p>
             </div>
             <div className="flex gap-3">
               <button
-                onClick={() => setIsCapturing(true)}
-                disabled={isCapturing}
+                onClick={handleAnalyze}
+                disabled={!selectedFile || loading}
                 className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
               >
-                <Play className="w-4 h-4" />
-                Start
+                <Activity className="w-4 h-4" />
+                {loading ? 'Analyzing...' : 'Analyze Capture'}
               </button>
               <button
-                onClick={() => setIsCapturing(false)}
-                disabled={!isCapturing}
+                onClick={handleClear}
+                disabled={loading && !selectedFile}
                 className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
               >
-                <Square className="w-4 h-4" />
-                Stop
+                Clear
               </button>
             </div>
           </div>
 
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="px-5 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Activity className={`w-5 h-5 ${isCapturing ? 'animate-pulse' : ''}`} />
-                <span className="font-semibold">Captured Network Traffic</span>
-              </div>
-              <span className="text-sm bg-white/15 px-3 py-1 rounded-full">
-                {isCapturing ? 'Capturing' : 'Paused'}
+          <label
+            htmlFor="pcap-upload"
+            onDragOver={(event) => {
+              event.preventDefault()
+              setIsDragging(true)
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors cursor-pointer ${
+              isDragging
+                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                : 'border-gray-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800/50'
+            }`}
+          >
+            <Upload className="w-10 h-10 text-indigo-600 mb-3" />
+            <span className="text-base font-semibold text-gray-900 dark:text-white">
+              Drag and drop a `.pcap` or `.pcapng` file here
+            </span>
+            <span className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              or click to browse and attach a packet capture
+            </span>
+            <input
+              id="pcap-upload"
+              type="file"
+              accept=".pcap,.pcapng"
+              className="hidden"
+              onChange={(event) => handleFileSelection(event.target.files?.[0])}
+            />
+          </label>
+
+          <div className="mt-4 flex items-center gap-3 rounded-xl bg-gray-50 dark:bg-gray-700/40 px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+            <FileUp className="w-4 h-4 text-indigo-600" />
+            {selectedFile ? (
+              <span>
+                Selected file: <span className="font-semibold text-gray-900 dark:text-white">{selectedFile.name}</span>
               </span>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-gray-900/40">
-              <div className="px-5 py-5 border-b border-gray-200 dark:border-gray-700">
-                <label
-                  htmlFor="pcap-upload"
-                  onDragOver={(event) => {
-                    event.preventDefault()
-                    setIsDragging(true)
-                  }}
-                  onDragLeave={() => setIsDragging(false)}
-                  onDrop={handleDrop}
-                  className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors cursor-pointer ${
-                    isDragging
-                      ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                      : 'border-gray-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800/50'
-                  }`}
-                >
-                  <Upload className="w-8 h-8 text-indigo-600 mb-3" />
-                  <span className="text-base font-semibold text-gray-900 dark:text-white">
-                    Drag and drop a `.pcap` file here
-                  </span>
-                  <span className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    or click to browse and attach a capture file
-                  </span>
-                  <input
-                    id="pcap-upload"
-                    type="file"
-                    accept=".pcap"
-                    className="hidden"
-                    onChange={(event) => handleFileSelection(event.target.files?.[0])}
-                  />
-                </label>
-
-                <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-                  {pcapFile ? (
-                    <span>
-                      Selected file: <span className="font-semibold text-gray-900 dark:text-white">{pcapFile.name}</span>
-                    </span>
-                  ) : (
-                    <span>No `.pcap` file selected yet.</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-[0.9fr_1.2fr_1.2fr_0.8fr] gap-3 px-5 py-3 border-b border-gray-200 dark:border-gray-700 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                <span>Time</span>
-                <span>Source</span>
-                <span>Destination</span>
-                <span>Protocol</span>
-              </div>
-
-              {capturedPackets.length > 0 ? (
-                capturedPackets.map((packet, index) => (
-                  <div
-                    key={`${packet.time}-${packet.source}-${index}`}
-                    className="px-5 py-4 border-b last:border-b-0 border-gray-200 dark:border-gray-800"
-                  >
-                    <div className="grid grid-cols-[0.9fr_1.2fr_1.2fr_0.8fr] gap-3 text-sm text-gray-800 dark:text-gray-200">
-                      <span>{packet.time}</span>
-                      <span>{packet.source}</span>
-                      <span>{packet.destination}</span>
-                      <span>{packet.protocol}</span>
-                    </div>
-                    <div className="mt-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{packet.note}</p>
-                      <span
-                        className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                          packet.status === 'safe'
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200'
-                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-200'
-                        }`}
-                      >
-                        {packet.status === 'safe' ? 'Safe' : 'Suspicious'}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="px-5 py-12 text-center text-gray-500 dark:text-gray-400">
-                  No packets captured yet. Press Start to begin monitoring.
-                </div>
-              )}
-            </div>
+            ) : (
+              <span>No capture selected yet.</span>
+            )}
           </div>
+
+          {error && (
+            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg flex gap-3 border border-red-200 dark:border-red-900/40">
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+            </div>
+          )}
+
+          {loading && <LoadingSpinner message="Analyzing capture... Please wait" />}
+
+          {result && (
+            <div className="mt-8 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="px-5 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-5 h-5" />
+                  <span className="font-semibold">Analysis Result</span>
+                </div>
+                <span className="text-sm bg-white/15 px-3 py-1 rounded-full">
+                  {result.filename}
+                </span>
+              </div>
+
+              <div className="p-5 space-y-5 bg-gray-50 dark:bg-gray-900/40">
+                <div className={`rounded-xl p-4 font-semibold ${summaryTone}`}>
+                  {result.isIntrusion ? 'Potential intrusion detected' : 'Traffic appears legitimate'}
+                </div>
+
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{result.message}</p>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="rounded-xl bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Confidence</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {(result.confidence * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Flows Analyzed</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{result.flowsAnalyzed}</p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Model Used</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{result.modelUsed}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         <aside className="space-y-8">
@@ -246,45 +206,91 @@ function NetworkIDS() {
             <div className="flex items-center gap-3 mb-5">
               <Shield className="w-7 h-7 text-indigo-600" />
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Model Prediction</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Flow Verdicts</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Latest verdict from the intrusion detection model
+                  Per-flow predictions returned by `/api/network-check`
                 </p>
               </div>
             </div>
 
-            <div className={`rounded-xl p-4 font-semibold ${prediction.tone}`}>
-              {prediction.label}
-            </div>
-
-            <p className="mt-4 text-gray-700 dark:text-gray-300 leading-relaxed">
-              {prediction.verdict}
-            </p>
-
-            <div className="mt-6 grid sm:grid-cols-2 gap-4">
-              <div className="rounded-xl bg-gray-50 dark:bg-gray-700/40 p-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Current Session</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{capturedPackets.length}</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Packets shown</p>
+            {result?.flowResults?.length ? (
+              <div className="space-y-3">
+                {result.flowResults.map((flow) => {
+                  const isIntrusion = flow.prediction === 'intrusion'
+                  return (
+                    <div
+                      key={flow.flow_id}
+                      className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 p-4"
+                    >
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white break-all">
+                            {flow.flow_id}
+                          </p>
+                          <span
+                            className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                              isIntrusion
+                                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-200'
+                                : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-200'
+                            }`}
+                          >
+                            {isIntrusion ? 'Intrusion' : 'Safe'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {flow.source} → {flow.destination} · {flow.protocol} · {flow.packet_count} packets
+                        </p>
+                        <div className="flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
+                          <span>Confidence: {(flow.confidence * 100).toFixed(1)}%</span>
+                          <span>Duration: {flow.duration_seconds.toFixed(3)}s</span>
+                          <span>Ports: {flow.source_port} → {flow.destination_port}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-              <div className="rounded-xl bg-gray-50 dark:bg-gray-700/40 p-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Capture Status</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {isCapturing ? 'Active' : 'Stopped'}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Monitoring state</p>
+            ) : (
+              <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-6 text-sm text-gray-600 dark:text-gray-400">
+                Once you upload a capture, we’ll list each analyzed flow here with its prediction and confidence.
               </div>
-            </div>
+            )}
           </div>
 
           <div className="card bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Detection Summary</h3>
-            <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
-              <p>Traffic flagged as suspicious is treated as not safe to open until reviewed.</p>
-              <p>Encrypted traffic to trusted services is labeled safe when no abnormal pattern is present.</p>
-              <p>This page is frontend-only for now and demonstrates the IDS monitoring workflow.</p>
-            </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Feature Alignment</h3>
+            {result?.featureLogs?.length ? (
+              <ul className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+                {result.featureLogs.map((log, index) => (
+                  <li key={`${index}-${log}`} className="flex gap-3">
+                    <span className="text-indigo-600">•</span>
+                    <span>{log}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                The backend returns feature-alignment notes so you can see how the capture was matched to the
+                training schema.
+              </p>
+            )}
           </div>
+
+          {result?.featureColumns?.length ? (
+            <div className="card">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Aligned Feature Columns</h3>
+              <div className="flex flex-wrap gap-2">
+                {result.featureColumns.slice(0, 18).map((column) => (
+                  <span
+                    key={column}
+                    className="px-3 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                  >
+                    {column}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </aside>
       </div>
     </div>

@@ -195,9 +195,80 @@ export const dashboardApi = {
   },
 }
 
+export const networkApi = {
+  async analyzeCapture(file) {
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await apiClient.post('/network-check', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      return {
+        isIntrusion: response.data.prediction === 'intrusion',
+        confidence: response.data.confidence || 0,
+        message: response.data.message || '',
+        modelUsed: response.data.model_used || 'Random Forest Portscan IDS',
+        filename: response.data.filename || file.name,
+        flowsAnalyzed: response.data.flows_analyzed || 0,
+        featureColumns: response.data.feature_columns || [],
+        featureLogs: response.data.feature_logs || [],
+        flowResults: response.data.flow_results || [],
+      }
+    } catch (error) {
+      console.warn('API call failed, using mock network data:', error.message)
+
+      return {
+        isIntrusion: true,
+        confidence: 0.87,
+        message:
+          'The uploaded capture shows suspicious network flow behavior in this demo fallback.',
+        modelUsed: 'Demo Network IDS Engine',
+        filename: file.name,
+        flowsAnalyzed: 3,
+        featureColumns: ['Flow Duration', 'Total Fwd Packets', 'Flow Bytes/s'],
+        featureLogs: [
+          'Fallback analysis used because the backend API was unavailable.',
+          'Feature alignment completed against the demo schema.',
+        ],
+        flowResults: [
+          {
+            flow_id: '10.0.0.45:51514 -> 185.220.101.4:443 (TCP)',
+            source: '10.0.0.45',
+            destination: '185.220.101.4',
+            source_port: 51514,
+            destination_port: 443,
+            protocol: 'TCP',
+            prediction: 'intrusion',
+            confidence: 0.91,
+            packet_count: 14,
+            duration_seconds: 3.42,
+          },
+          {
+            flow_id: '192.168.1.24:60822 -> 172.217.160.78:443 (TCP)',
+            source: '192.168.1.24',
+            destination: '172.217.160.78',
+            source_port: 60822,
+            destination_port: 443,
+            protocol: 'TCP',
+            prediction: 'safe',
+            confidence: 0.94,
+            packet_count: 21,
+            duration_seconds: 8.11,
+          },
+        ],
+      }
+    }
+  },
+}
+
 export default {
   emailApi,
   urlApi,
   smsApi,
   dashboardApi,
+  networkApi,
 }
