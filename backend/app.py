@@ -8,9 +8,11 @@ from pathlib import Path
 import os
 import joblib
 import numpy as np
+import logging
 from dotenv import load_dotenv
 from google import genai
 import re
+from network_ids import analyze_network_capture, load_network_artifacts
 
 ENV_PATH = Path(__file__).with_name(".env")
 load_dotenv(dotenv_path=ENV_PATH)
@@ -389,9 +391,11 @@ def generate_ai_url_explanation(
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend
+logging.basicConfig(level=logging.INFO)
 
 # Initialize paths
 ML_EMAIL_PATH = Path(__file__).parent.parent / 'ml' / 'email'
+ML_NETWORK_PATH = Path(__file__).parent.parent / 'ml' / 'network'
 
 # Load SVM model for email analysis
 # Load SVM model for email analysis
@@ -571,6 +575,9 @@ sms_label_encoder = None
 sms_model_loaded = False
 url_model = None
 url_model_loaded = False
+network_model = None
+network_scaler = None
+network_model_loaded = False
 
 def load_sms_model():
 
@@ -752,6 +759,30 @@ def load_url_model():
         print(f"URL model load error: {e}")
 
     url_model_loaded = True
+
+def load_network_model():
+    global network_model
+    global network_scaler
+    global network_model_loaded
+
+    if network_model_loaded:
+        return
+
+    try:
+        model_path = ML_NETWORK_PATH / "portscan_ids.pkl"
+        scaler_path = ML_NETWORK_PATH / "scaler.pkl"
+
+        if not model_path.exists():
+            print(f"Warning: Network model not found at {model_path}")
+        elif not scaler_path.exists():
+            print(f"Warning: Network scaler not found at {scaler_path}")
+        else:
+            network_model, network_scaler = load_network_artifacts(model_path, scaler_path)
+            print("Network IDS model and scaler loaded successfully")
+    except Exception as e:
+        print(f"Network IDS model load error: {e}")
+
+    network_model_loaded = True
 
 def analyze_url(url):
     """
@@ -969,6 +1000,45 @@ def url_check():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/network-check', methods=['POST'])
+def network_check():
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'PCAP or PCAPNG file is required under the "file" field.'}), 400
+
+        upload = request.files['file']
+        if not upload or not upload.filename:
+            return jsonify({'error': 'A valid .pcap or .pcapng file is required.'}), 400
+
+        suffix = Path(upload.filename).suffix.lower()
+        if suffix not in {'.pcap', '.pcapng'}:
+            return jsonify({'error': 'Only .pcap and .pcapng files are supported.'}), 400
+
+        if not network_model_loaded:
+            load_network_model()
+
+        if network_model is None or network_scaler is None:
+            return jsonify({'error': 'Network IDS model artifacts are unavailable.'}), 500
+
+        analysis = analyze_network_capture(upload, network_model, network_scaler)
+        summary = analysis['summary']
+
+        return jsonify({
+            'prediction': summary['prediction'],
+            'confidence': summary['confidence'],
+            'message': summary['message'],
+            'model_used': 'Random Forest Portscan IDS',
+            'filename': analysis['filename'],
+            'flows_analyzed': analysis['flows_analyzed'],
+            'feature_columns': analysis['feature_columns'],
+            'feature_logs': analysis['feature_logs'],
+            'flow_results': analysis['flow_results'],
+        }), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
     """Get dashboard statistics"""
@@ -1029,6 +1099,7 @@ if __name__ == '__main__':
     Available Endpoints:
     - POST   /api/email-check          (Analyze emails)
     - POST   /api/url-check            (Analyze URLs)
+    - POST   /api/network-check        (Analyze PCAP/PCAPNG captures)
     - GET    /api/stats                (Dashboard stats)
     - GET    /api/models/performance   (Model leaderboard)
     - GET    /api/health               (Health check)
