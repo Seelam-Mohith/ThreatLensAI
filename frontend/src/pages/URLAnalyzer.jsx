@@ -3,7 +3,6 @@ import { Globe, AlertCircle, Check } from 'lucide-react'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ResultCard from '../components/ResultCard'
 import AIInsightCard from '../components/AIInsightCard'
-import LeaderboardTable from '../components/LeaderboardTable'
 import { useUrlAnalysis } from '../hooks/useAnalysis'
 import { urlApi } from '../services/api'
 
@@ -112,14 +111,6 @@ function URLAnalyzer() {
       {/* Result Card */}
       <ResultCard result={result} isLoading={loading} />
       <AIInsightCard result={result} artifactLabel="URL" />
-
-      {/* Leaderboard */}
-      {result && result.leaderboard && (
-        <LeaderboardTable
-          data={result.leaderboard}
-          highlight="SVM (Linear, LinearSVC)"
-        />
-      )}
 
       {/* Safety Tips Section */}
       <div className="mt-12 grid md:grid-cols-2 gap-8">
