@@ -60,7 +60,7 @@ function Home() {
         </h1>
 
         <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
-          Analyze emails and URLs using state-of-the-art machine learning models. Stay protected from phishing attacks and cyber threats.
+          Analyze Emails, SMS, URLs and Network Traffic using state-of-the-art machine learning models. Stay protected from phishing attacks and cyber threats.
         </p>
 
         <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
@@ -72,6 +72,9 @@ function Home() {
           </Link>
           <Link to="/sms-analyzer" className="btn-primary">
             Analyze SMS
+          </Link>
+          <Link to="/network-ids" className="btn-primary">
+            Network IDS
           </Link>
         </div>
       </section>
@@ -150,6 +153,9 @@ function Home() {
           </Link>
           <Link to="/sms-analyzer" className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
             Analyze SMS
+          </Link>
+          <Link to="/network-ids" className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            Network IDS
           </Link>
           <Link to="/dashboard" className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition-colors">
             View Model Statistics
