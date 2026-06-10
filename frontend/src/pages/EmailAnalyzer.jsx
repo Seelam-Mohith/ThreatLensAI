@@ -3,7 +3,6 @@ import { Mail, AlertCircle } from 'lucide-react'
 import LoadingSpinner from '../components/LoadingSpinner'
 import AIInsightCard from '../components/AIInsightCard'
 import ResultCard from '../components/ResultCard'
-import LeaderboardTable from '../components/LeaderboardTable'
 import { useEmailAnalysis } from '../hooks/useAnalysis'
 import { emailApi } from '../services/api'
 
@@ -96,12 +95,6 @@ function EmailAnalyzer() {
       <AIInsightCard result={result} artifactLabel="Email" />
 
       {/* Leaderboard */}
-      {result && result.leaderboard && (
-        <LeaderboardTable
-          data={result.leaderboard}
-          highlight="SVM (Linear, LinearSVC)"
-        />
-      )}
 
       {/* Tips Section */}
       {!result && !loading && (
