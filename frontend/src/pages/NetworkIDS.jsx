@@ -110,95 +110,105 @@ function NetworkIDS() {
             </div>
           </div>
 
-          <label
-            htmlFor="pcap-upload"
-            onDragOver={(event) => {
-              event.preventDefault()
-              setIsDragging(true)
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-            className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors cursor-pointer ${
-              isDragging
-                ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
-                : 'border-gray-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800/50'
-            }`}
-          >
-            <Upload className="w-10 h-10 text-indigo-600 mb-3" />
-            <span className="text-base font-semibold text-gray-900 dark:text-white">
-              Drag and drop a `.pcap` or `.pcapng` file here
-            </span>
-            <span className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              or click to browse and attach a packet capture
-            </span>
-            <input
-              id="pcap-upload"
-              type="file"
-              accept=".pcap,.pcapng"
-              className="hidden"
-              onChange={(event) => handleFileSelection(event.target.files?.[0])}
-            />
-          </label>
+          <div className="grid xl:grid-cols-2 gap-6 items-start">
+            <div className="space-y-4">
+              <label
+                htmlFor="pcap-upload"
+                onDragOver={(event) => {
+                  event.preventDefault()
+                  setIsDragging(true)
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+                className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors cursor-pointer ${
+                  isDragging
+                    ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20'
+                    : 'border-gray-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800/50'
+                }`}
+              >
+                <Upload className="w-10 h-10 text-indigo-600 mb-3" />
+                <span className="text-base font-semibold text-gray-900 dark:text-white">
+                  Drag and drop a `.pcap` or `.pcapng` file here
+                </span>
+                <span className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  or click to browse and attach a packet capture
+                </span>
+                <input
+                  id="pcap-upload"
+                  type="file"
+                  accept=".pcap,.pcapng"
+                  className="hidden"
+                  onChange={(event) => handleFileSelection(event.target.files?.[0])}
+                />
+              </label>
 
-          <div className="mt-4 flex items-center gap-3 rounded-xl bg-gray-50 dark:bg-gray-700/40 px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-            <FileUp className="w-4 h-4 text-indigo-600" />
-            {selectedFile ? (
-              <span>
-                Selected file: <span className="font-semibold text-gray-900 dark:text-white">{selectedFile.name}</span>
-              </span>
-            ) : (
-              <span>No capture selected yet.</span>
-            )}
-          </div>
+              <div className="flex items-center gap-3 rounded-xl bg-gray-50 dark:bg-gray-700/40 px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                <FileUp className="w-4 h-4 text-indigo-600" />
+                {selectedFile ? (
+                  <span>
+                    Selected file: <span className="font-semibold text-gray-900 dark:text-white">{selectedFile.name}</span>
+                  </span>
+                ) : (
+                  <span>No capture selected yet.</span>
+                )}
+              </div>
 
-          {error && (
-            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg flex gap-3 border border-red-200 dark:border-red-900/40">
-              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+              {error && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg flex gap-3 border border-red-200 dark:border-red-900/40">
+                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                </div>
+              )}
+
+              {loading && <LoadingSpinner message="Analyzing capture... Please wait" />}
             </div>
-          )}
 
-          {loading && <LoadingSpinner message="Analyzing capture... Please wait" />}
-
-          {result && (
-            <div className="mt-8 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="px-5 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <Shield className="w-5 h-5" />
                   <span className="font-semibold">Analysis Result</span>
                 </div>
                 <span className="text-sm bg-white/15 px-3 py-1 rounded-full">
-                  {result.filename}
+                  {result?.filename || 'Waiting for upload'}
                 </span>
               </div>
 
-              <div className="p-5 space-y-5 bg-gray-50 dark:bg-gray-900/40">
-                <div className={`rounded-xl p-4 font-semibold ${summaryTone}`}>
-                  {result.isIntrusion ? 'Potential intrusion detected' : 'Traffic appears legitimate'}
-                </div>
+              <div className="p-5 space-y-5 bg-gray-50 dark:bg-gray-900/40 min-h-[260px]">
+                {result ? (
+                  <>
+                    <div className={`rounded-xl p-4 font-semibold ${summaryTone}`}>
+                      {result.isIntrusion ? 'Potential intrusion detected' : 'Traffic appears legitimate'}
+                    </div>
 
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{result.message}</p>
+                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{result.message}</p>
 
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="rounded-xl bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Confidence</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {(result.confidence * 100).toFixed(1)}%
-                    </p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="rounded-xl bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Confidence</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {(result.confidence * 100).toFixed(1)}%
+                        </p>
+                      </div>
+                      <div className="rounded-xl bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Flows Analyzed</p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{result.flowsAnalyzed}</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Model Used</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{result.modelUsed}</p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex h-full min-h-[220px] items-center justify-center text-center text-gray-500 dark:text-gray-400">
+                    Upload a capture and run analysis to see the result here.
                   </div>
-                  <div className="rounded-xl bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Flows Analyzed</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{result.flowsAnalyzed}</p>
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-white dark:bg-gray-800 p-4 border border-gray-200 dark:border-gray-700">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Model Used</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{result.modelUsed}</p>
-                </div>
+                )}
               </div>
             </div>
-          )}
+          </div>
         </section>
 
         <aside className="space-y-8">
