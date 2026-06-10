@@ -154,6 +154,9 @@ function Home() {
           <Link to="/sms-analyzer" className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
             Analyze SMS
           </Link>
+          <Link to="/url-analyzer" className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            Analyze URL
+          </Link>
           <Link to="/network-ids" className="bg-white text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
             Network IDS
           </Link>
