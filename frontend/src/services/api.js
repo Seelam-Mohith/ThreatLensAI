@@ -22,7 +22,7 @@ export const emailApi = {
   async checkEmail(emailContent) {
     try {
       // Try to call the backend API
-      const response = await apiClient.post('/email-check', { content: emailContent })
+      const response = await apiClient.post('/api/email-check', { content: emailContent })
       return {
         isPhishing: response.data.prediction === 'phishing',
         confidence: response.data.confidence,
@@ -65,7 +65,7 @@ export const urlApi = {
   async checkUrl(url) {
     try {
       // Try to call the backend API
-      const response = await apiClient.post('/url-check', { url })
+      const response = await apiClient.post('/api/url-check', { url })
       return {
         isPhishing: response.data.prediction === 'phishing',
         confidence: response.data.confidence,
@@ -109,7 +109,7 @@ export const smsApi = {
     try {
 
       const response = await apiClient.post(
-        '/sms-check',
+        '/api/sms-check',
         {
           content: smsContent
         }
@@ -171,7 +171,7 @@ export const smsApi = {
 export const dashboardApi = {
   async getStats() {
     try {
-      const response = await apiClient.get('/stats')
+      const response = await apiClient.get('/api/stats')
       return response.data
     } catch (error) {
       console.warn('API call failed, using mock stats:', error.message)
@@ -201,7 +201,7 @@ export const networkApi = {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await apiClient.post('/network-check', formData, {
+      const response = await apiClient.post('/api/network-check', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
