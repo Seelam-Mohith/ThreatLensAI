@@ -15,6 +15,9 @@ import re
 from network_ids import analyze_network_capture, load_network_artifacts
 
 ENV_PATH = Path(__file__).with_name(".env")
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "models" / "portscan_ids.pkl"
+SCALER_PATH = BASE_DIR / "models" / "scaler.pkl"
 load_dotenv(dotenv_path=ENV_PATH)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -578,6 +581,7 @@ url_model_loaded = False
 network_model = None
 network_scaler = None
 network_model_loaded = False
+network_model_error = None
 
 def load_sms_model():
 
@@ -764,23 +768,33 @@ def load_network_model():
     global network_model
     global network_scaler
     global network_model_loaded
+    global network_model_error
 
     if network_model_loaded:
         return
 
-    try:
-        model_path = ML_NETWORK_PATH / "portscan_ids.pkl"
-        scaler_path = ML_NETWORK_PATH / "scaler.pkl"
+    print(f"Network IDS model path: {MODEL_PATH.resolve()}")
+    print(f"Network IDS scaler path: {SCALER_PATH.resolve()}")
 
-        if not model_path.exists():
-            print(f"Warning: Network model not found at {model_path}")
-        elif not scaler_path.exists():
-            print(f"Warning: Network scaler not found at {scaler_path}")
+    try:
+        if not MODEL_PATH.exists() or not SCALER_PATH.exists():
+            missing_paths = [
+                str(path.resolve())
+                for path in (MODEL_PATH, SCALER_PATH)
+                if not path.exists()
+            ]
+            network_model_error = (
+                "Network IDS model artifacts are missing. "
+                f"Expected files: {', '.join(missing_paths)}"
+            )
+            print(f"Warning: {network_model_error}")
         else:
-            network_model, network_scaler = load_network_artifacts(model_path, scaler_path)
+            network_model, network_scaler = load_network_artifacts(MODEL_PATH, SCALER_PATH)
+            network_model_error = None
             print("Network IDS model and scaler loaded successfully")
     except Exception as e:
-        print(f"Network IDS model load error: {e}")
+        network_model_error = f"Failed to load Network IDS model artifacts: {e}"
+        print(f"Network IDS model load error: {network_model_error}")
 
     network_model_loaded = True
 
@@ -1018,7 +1032,12 @@ def network_check():
             load_network_model()
 
         if network_model is None or network_scaler is None:
-            return jsonify({'error': 'Network IDS model artifacts are unavailable.'}), 500
+            return jsonify({
+                'error': network_model_error or (
+                    'Network IDS model artifacts are unavailable. '
+                    f'Expected files at {MODEL_PATH.resolve()} and {SCALER_PATH.resolve()}.'
+                )
+            }), 503
 
         analysis = analyze_network_capture(upload, network_model, network_scaler)
         summary = analysis['summary']
