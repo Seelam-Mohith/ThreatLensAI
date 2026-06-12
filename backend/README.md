@@ -6,7 +6,7 @@ Flask backend API for the QuantShield phishing detection system.
 
 ### Requirements
 - Python 3.8+
-- pip or conda
+- pip 
 
 ### Setup
 
